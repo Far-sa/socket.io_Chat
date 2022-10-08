@@ -2,11 +2,13 @@ const { StatusCodes: HttpStatus } = require('http-status-codes')
 
 const Controller = require('../controller')
 const Conversation = require('../../../models/conversation')
+const createHttpError = require('http-errors')
 
 class NameSpaceController extends Controller {
   async addNameSpace (req, res, next) {
     try {
       const { title, endpoint } = req.body
+      await this.findNameSpaceWithEndpoint(endpoint)
       const conversation = await Conversation.create({ title, endpoint })
       return res.status(HttpStatus.CREATED).json({
         statusCode: HttpStatus.CREATED,
@@ -31,6 +33,11 @@ class NameSpaceController extends Controller {
     } catch (err) {
       next(err)
     }
+  }
+  async findNameSpaceWithEndpoint (endpoint) {
+    const conversation = await Conversation.findOne({ endpoint })
+    if (conversation)
+      throw createHttpError.BadRequest('Endpoint is already existed')
   }
 }
 
